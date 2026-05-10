@@ -1,0 +1,5 @@
+# Cargo build output
+/target/
+
+# Tauri-generated capability/ACL schemas (regenerated on each build)
+/gen/schemas/

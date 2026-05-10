@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude Code local state (per-machine settings, conversation memory pointers, etc.)
+.claude/
+
+# Env files — never check these in
+.env
+.env.*
+!.env.example
+
+# Bundled artifacts (Tauri also writes these into src-tauri/target which is ignored,
+# but list them at the root for any out-of-tree builds)
+*.app
+*.dmg
+*.appimage
+*.deb
+*.rpm
+*.msi
+*.exe
