@@ -1,12 +1,12 @@
 [package]
-name = "typy"
+name = "typpy"
 version = "0.1.0"
 description = "Local editor for Hugo blogs"
 authors = ["Chenxiao Gao"]
 edition = "2021"
 
 [lib]
-name = "typy_lib"
+name = "typpy_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

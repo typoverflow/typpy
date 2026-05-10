@@ -15,17 +15,17 @@ export function HugoLogPanel() {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const [height, setHeight] = useState(() => {
-    const stored = localStorage.getItem("typy.hugoLog.height");
+    const stored = localStorage.getItem("typpy.hugoLog.height");
     const n = stored ? parseInt(stored, 10) : NaN;
     return Number.isFinite(n) && n >= MIN_HEIGHT ? n : DEFAULT_HEIGHT;
   });
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("typy.hugoLog.collapsed") === "1");
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("typpy.hugoLog.collapsed") === "1");
 
   useEffect(() => {
-    localStorage.setItem("typy.hugoLog.height", String(height));
+    localStorage.setItem("typpy.hugoLog.height", String(height));
   }, [height]);
   useEffect(() => {
-    localStorage.setItem("typy.hugoLog.collapsed", collapsed ? "1" : "0");
+    localStorage.setItem("typpy.hugoLog.collapsed", collapsed ? "1" : "0");
   }, [collapsed]);
 
   useEffect(() => {

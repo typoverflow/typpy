@@ -251,7 +251,7 @@ fn fs_temp_path(filename: String) -> AppResult<PathBuf> {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_millis())
         .unwrap_or(0);
-    Ok(dir.join(format!("typy-{now}-{safe}")))
+    Ok(dir.join(format!("typpy-{now}-{safe}")))
 }
 
 #[tauri::command]

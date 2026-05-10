@@ -1,8 +1,8 @@
-# Typy
+# Typpy
 
 A lightweight, native macOS editor for [Hugo](https://gohugo.io) blogs. WYSIWYG markdown, on-the-fly image compression, built-in git, and a one-click Hugo dev server with side-by-side preview.
 
-Typy is theme- and section-agnostic — it works on any Hugo project with a `content/` directory.
+Typpy is theme- and section-agnostic — it works on any Hugo project with a `content/` directory.
 
 <br />
 
@@ -13,7 +13,7 @@ Typy is theme- and section-agnostic — it works on any Hugo project with a `con
 - **Drag-and-drop image import** with automatic compression. Camera-sized JPEGs get resized + re-encoded into your page bundle in one step; configurable max width / quality / format.
 - **Git integration** (pull / commit / push) that shells out to your existing `git` — uses your SSH keys, GPG signing, credentials. Visual file-checklist commit dialog.
 - **Hugo dev server** with a single click. Captures stdout/stderr into a resizable log panel so theme or module errors are visible. Side preview pane iframes the current post at the right URL.
-- **Orphan-aware port handling** — if `:1313` is held by a runaway hugo from a previous session, Typy detects it (by process name, never blindly), terminates it, and starts cleanly on the same port.
+- **Orphan-aware port handling** — if `:1313` is held by a runaway hugo from a previous session, Typpy detects it (by process name, never blindly), terminates it, and starts cleanly on the same port.
 - **Native `.app`** — ~4 MB binary, ~80 MB RAM idle, no Electron.
 
 <br />
@@ -34,25 +34,25 @@ To build from source you also need:
 
 ## Install (pre-built)
 
-Download the latest `.dmg` from the [Releases](../../releases) page, drag `Typy.app` into `/Applications`, and open it.
+Download the latest `.dmg` from the [Releases](../../releases) page, drag `Typpy.app` into `/Applications`, and open it.
 
-The app is **not** signed or notarized. On first launch macOS will refuse to open it; right-click → Open, then confirm in the dialog. Alternatively: `xattr -d com.apple.quarantine /Applications/Typy.app`.
+The app is **not** signed or notarized. On first launch macOS will refuse to open it; right-click → Open, then confirm in the dialog. Alternatively: `xattr -d com.apple.quarantine /Applications/Typpy.app`.
 
 <br />
 
 ## Build from source
 
 ```bash
-git clone https://github.com/typoverflow/typy.git
-cd typy
+git clone https://github.com/typoverflow/typpy.git
+cd typpy
 npm install
 npm run tauri build
 ```
 
 Artifacts land in:
 
-- `src-tauri/target/release/bundle/macos/Typy.app`
-- `src-tauri/target/release/bundle/dmg/Typy_<version>_aarch64.dmg`
+- `src-tauri/target/release/bundle/macos/Typpy.app`
+- `src-tauri/target/release/bundle/dmg/Typpy_<version>_aarch64.dmg`
 
 <br />
 
@@ -71,14 +71,14 @@ npx tsc --noEmit                 # frontend
 cd src-tauri && cargo check      # backend
 ```
 
-Settings live at `~/Library/Application Support/io.gaocx.typy/settings.json` — delete to reset to the welcome screen.
+Settings live at `~/Library/Application Support/io.gaocx.typpy/settings.json` — delete to reset to the welcome screen.
 
 <br />
 
 ## Project layout
 
 ```
-typy/
+typpy/
 ├── src/                  React + TypeScript frontend
 │   ├── api/tauri.ts      Typed wrappers around Rust commands
 │   ├── components/       UI (Sidebar, Editor, TopBar, dialogs, etc.)
@@ -102,14 +102,14 @@ typy/
 
 ## How it talks to your blog
 
-Typy treats the Hugo project as the source of truth:
+Typpy treats the Hugo project as the source of truth:
 
 - **Reads:** scans `content/` for sections (`post/`, `page/`, etc.) and page bundles (`section/slug/index.md` + co-located images). Front-matter is parsed (YAML or TOML) and shown as a structured form; the body is rendered in the WYSIWYG editor.
-- **Writes:** on save, Typy serializes the form back into the original front-matter format and writes the file. Existing YAML field order is preserved as much as possible; unknown fields pass through untouched.
+- **Writes:** on save, Typpy serializes the form back into the original front-matter format and writes the file. Existing YAML field order is preserved as much as possible; unknown fields pass through untouched.
 - **Images:** dropped/pasted images are compressed with the `image` crate, written into the bundle directory next to `index.md`, and referenced by a relative filename — exactly how Hugo expects.
 - **Git:** never auto-commits. The commit dialog shows you exactly what will be staged.
 
-This means you can keep editing the same posts in vim or VS Code — Typy doesn't write anything outside the file you're editing.
+This means you can keep editing the same posts in vim or VS Code — Typpy doesn't write anything outside the file you're editing.
 
 <br />
 
