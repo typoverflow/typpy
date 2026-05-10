@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Globe, RotateCw, X } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useApp } from "../store/app";
+
+const DEFAULT_WIDTH = 520;
+const MIN_WIDTH = 320;
+const EDITOR_MIN_WIDTH = 480;
 
 /** Derive a Hugo URL path from a content file path. Mirrors Hugo's default permalink scheme. */
 function deriveUrlPath(repoRoot: string, docPath: string, frontmatter: Record<string, unknown>): string {
@@ -39,6 +43,53 @@ export function PreviewPane() {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [bust, setBust] = useState(0);
 
+  const [width, setWidth] = useState(() => {
+    const stored = localStorage.getItem("typpy.previewPane.width");
+    const n = stored ? parseInt(stored, 10) : NaN;
+    return Number.isFinite(n) && n >= MIN_WIDTH ? n : DEFAULT_WIDTH;
+  });
+  useEffect(() => {
+    localStorage.setItem("typpy.previewPane.width", String(width));
+  }, [width]);
+
+  // Clamp the width if the user resizes the window smaller than the current pane.
+  useEffect(() => {
+    function clamp() {
+      const max = Math.max(MIN_WIDTH, window.innerWidth - EDITOR_MIN_WIDTH);
+      setWidth((w) => Math.min(w, max));
+    }
+    window.addEventListener("resize", clamp);
+    clamp();
+    return () => window.removeEventListener("resize", clamp);
+  }, []);
+
+  const dragState = useRef<{ startX: number; startW: number } | null>(null);
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragState.current = { startX: e.clientX, startW: width };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    // Prevent iframe from stealing mousemove events.
+    if (iframeRef.current) iframeRef.current.style.pointerEvents = "none";
+    function onMove(ev: MouseEvent) {
+      if (!dragState.current) return;
+      const delta = dragState.current.startX - ev.clientX;
+      const maxW = Math.max(MIN_WIDTH, window.innerWidth - EDITOR_MIN_WIDTH);
+      const next = Math.min(maxW, Math.max(MIN_WIDTH, dragState.current.startW + delta));
+      setWidth(next);
+    }
+    function onUp() {
+      dragState.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      if (iframeRef.current) iframeRef.current.style.pointerEvents = "";
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [width]);
+
   const urlPath = useMemo(() => {
     if (!repo || !doc) return "/";
     return deriveUrlPath(repo.root, doc.path, doc.frontmatter);
@@ -61,7 +112,18 @@ export function PreviewPane() {
   if (!open) return null;
 
   return (
-    <aside className="flex h-full w-[40%] min-w-[400px] flex-col border-l border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+    <aside
+      className="relative flex h-full shrink-0 flex-col border-l border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
+      style={{ width }}
+    >
+      <div
+        onMouseDown={onDragStart}
+        onDoubleClick={() => setWidth(DEFAULT_WIDTH)}
+        className="group absolute inset-y-0 left-0 z-10 -ml-1 flex w-2 cursor-col-resize items-center justify-center"
+        title="Drag to resize · double-click to reset"
+      >
+        <div className="h-12 w-0.5 rounded-full bg-stone-300 transition group-hover:bg-stone-500 dark:bg-stone-700 dark:group-hover:bg-stone-400" />
+      </div>
       <div className="flex items-center gap-2 border-b border-stone-200 px-3 py-1.5 dark:border-stone-800">
         <Globe size={14} className={port ? "text-emerald-500" : "text-stone-400"} />
         <span className="truncate font-mono text-xs text-stone-700 dark:text-stone-300">
