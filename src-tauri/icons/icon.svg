@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4338ca"/>
+      <stop offset="0.55" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="penBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.35" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="penCap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#92400e"/>
+      <stop offset="0.5" stop-color="#7c2d12"/>
+      <stop offset="1" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="nib" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#64748b"/>
+      <stop offset="0.6" stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="paperGlow" cx="0.4" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f1f5f9"/>
+    </radialGradient>
+    <filter id="paperShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+      <feOffset dx="0" dy="12"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="penShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="11"/>
+      <feOffset dx="-8" dy="16"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background squircle -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#bg)"/>
+
+  <!-- Subtle highlight in upper-left -->
+  <ellipse cx="360" cy="260" rx="500" ry="320" fill="#ffffff" opacity="0.07"/>
+
+  <!-- Paper, tilted -5° around its center -->
+  <g transform="rotate(-5 512 512)" filter="url(#paperShadow)">
+    <rect x="218" y="158" width="588" height="708" rx="30" fill="url(#paperGlow)"/>
+    <!-- Text lines -->
+    <rect x="288" y="266" width="408" height="22" rx="11" fill="#cbd5e1"/>
+    <rect x="288" y="332" width="468" height="22" rx="11" fill="#cbd5e1"/>
+    <rect x="288" y="398" width="344" height="22" rx="11" fill="#cbd5e1"/>
+    <rect x="288" y="464" width="436" height="22" rx="11" fill="#cbd5e1"/>
+    <!-- Active line being typed — accent blue -->
+    <rect x="288" y="530" width="226" height="24" rx="12" fill="#3b82f6"/>
+  </g>
+
+  <!-- Fountain pen — nib at (560, 600), body extends upper-right at 45° -->
+  <g transform="translate(560 600) rotate(45)" filter="url(#penShadow)">
+    <!-- Body (in local coords: nib at origin, body above) -->
+    <rect x="-40" y="-548" width="80" height="488" rx="40" fill="url(#penBody)"/>
+    <!-- Highlight stripe down body -->
+    <rect x="-28" y="-528" width="9" height="458" rx="5" fill="#fef3c7" opacity="0.55"/>
+    <!-- Cap (top portion of the body) -->
+    <rect x="-40" y="-548" width="80" height="170" rx="40" fill="url(#penCap)"/>
+    <!-- Cap band (gold) -->
+    <rect x="-44" y="-396" width="88" height="14" fill="#fbbf24"/>
+    <rect x="-44" y="-386" width="88" height="5" fill="#92400e" opacity="0.6"/>
+    <!-- Clip -->
+    <rect x="18" y="-528" width="14" height="106" rx="4" fill="#fbbf24" opacity="0.85"/>
+    <rect x="20" y="-528" width="3" height="98" rx="2" fill="#fde68a" opacity="0.75"/>
+    <!-- Section (grip between body and nib) -->
+    <rect x="-36" y="-66" width="72" height="20" rx="6" fill="#451a03"/>
+    <!-- Nib base (small dark band) -->
+    <rect x="-34" y="-46" width="68" height="13" rx="4" fill="#1e293b"/>
+    <!-- Nib (triangle, apex at origin) -->
+    <polygon points="-32,-33 32,-33 0,0" fill="url(#nib)"/>
+    <!-- Nib slit -->
+    <line x1="0" y1="-33" x2="0" y2="-4" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Breather hole -->
+    <circle cx="0" cy="-20" r="4" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>
+  </g>
+</svg>
