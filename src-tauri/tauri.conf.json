@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Typpy",
+  "productName": "typpy",
   "version": "0.1.0",
   "identifier": "io.gaocx.typpy",
   "build": {
@@ -46,7 +46,8 @@
     ],
     "category": "DeveloperTool",
     "macOS": {
-      "minimumSystemVersion": "12.0"
+      "minimumSystemVersion": "12.0",
+      "signingIdentity": "-"
     }
   }
 }

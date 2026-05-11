@@ -28,7 +28,7 @@ export function Welcome() {
             <Sparkles size={32} strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Typpy</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">typpy</h1>
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
               A local editor for Hugo blogs.
             </p>
