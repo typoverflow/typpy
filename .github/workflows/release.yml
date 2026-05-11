@@ -51,6 +51,28 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Set version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Setting version to $VERSION"
+          node -e "
+            const fs = require('fs');
+            const setJson = (p) => {
+              const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+              j.version = '$VERSION';
+              fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+            };
+            setJson('package.json');
+            setJson('src-tauri/tauri.conf.json');
+            const cargoPath = 'src-tauri/Cargo.toml';
+            const cargo = fs.readFileSync(cargoPath, 'utf8').replace(
+              /^version = \"[^\"]+\"/m,
+              'version = \"$VERSION\"'
+            );
+            fs.writeFileSync(cargoPath, cargo);
+          "
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
