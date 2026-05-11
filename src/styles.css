@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
+@import "@fontsource/source-serif-4/400.css";
+@import "@fontsource/source-serif-4/400-italic.css";
+@import "@fontsource/source-serif-4/700.css";
+@import "@fontsource/noto-serif-sc/chinese-simplified-400.css";
+@import "@fontsource/noto-serif-sc/chinese-simplified-700.css";
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --font-serif: "Charter", "Iowan Old Style", "Iowan", "Georgia", "Times New Roman", serif;
+  --font-serif: "Source Serif 4", "Noto Serif SC", "Charter", "Iowan Old Style", "Iowan", "Georgia", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --color-accent-50: oklch(0.97 0.02 250);
   --color-accent-100: oklch(0.94 0.04 250);
