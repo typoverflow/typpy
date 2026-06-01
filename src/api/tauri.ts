@@ -97,6 +97,18 @@ export const api = {
         },
       }),
   },
+  section: {
+    create: (args: { repoRoot: string; parent: string; name: string }) =>
+      invoke<string>("section_create", {
+        args: { repo_root: args.repoRoot, parent: args.parent, name: args.name },
+      }),
+  },
+  node: {
+    delete: (args: { repoRoot: string; path: string }) =>
+      invoke<void>("node_delete", {
+        args: { repo_root: args.repoRoot, path: args.path },
+      }),
+  },
   image: {
     import: (args: {
       src: string;

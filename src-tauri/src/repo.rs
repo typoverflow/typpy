@@ -229,6 +229,70 @@ pub fn create_bundle(repo_root: &Path, section: &str, slug: &str, frontmatter: &
     Ok(index)
 }
 
+/// Create a new section directory under `content/`. `parent` is a (possibly empty)
+/// relative path of an existing section; `name` is the new section's folder name.
+/// Writes an `_index.md` branch page so the section has a title in Hugo.
+pub fn create_section(repo_root: &Path, parent: &str, name: &str) -> AppResult<PathBuf> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err(AppError::msg("section name is required"));
+    }
+    if name.contains('/') || name.contains('\\') || name == "." || name == ".." {
+        return Err(AppError::msg("invalid section name"));
+    }
+    let mut dir = repo_root.join("content");
+    let parent = parent.trim().trim_matches('/');
+    if !parent.is_empty() {
+        dir = dir.join(parent);
+    }
+    let dir = dir.join(name);
+    if dir.exists() {
+        return Err(AppError::msg(format!("already exists: {}", dir.display())));
+    }
+    std::fs::create_dir_all(&dir)?;
+    let mut map = serde_yaml::Mapping::new();
+    map.insert(
+        serde_yaml::Value::String("title".into()),
+        serde_yaml::Value::String(name.to_string()),
+    );
+    let fm = serde_yaml::Value::Mapping(map);
+    let index = dir.join("_index.md");
+    write_post(&index, "yaml", &fm, "\n")?;
+    Ok(dir)
+}
+
+/// Delete a content node (a section directory, a page bundle, or a single page).
+/// `path` is the node's path as reported by `content_tree`: a directory for a
+/// section, an `index.md` for a bundle (the whole folder is removed), or a `.md`
+/// file for a single page. Refuses to touch anything outside `content/`.
+pub fn delete_node(repo_root: &Path, path: &Path) -> AppResult<()> {
+    let content = repo_root.join("content");
+    let canon_content = content.canonicalize().unwrap_or(content.clone());
+    let canon_target = path
+        .canonicalize()
+        .map_err(|e| AppError::msg(format!("{}: {e}", path.display())))?;
+    if !canon_target.starts_with(&canon_content) {
+        return Err(AppError::msg("refusing to delete outside content/"));
+    }
+    if canon_target == canon_content {
+        return Err(AppError::msg("refusing to delete the content/ root"));
+    }
+    if path.is_dir() {
+        // A section directory.
+        std::fs::remove_dir_all(path)?;
+    } else if path.file_name().and_then(|s| s.to_str()) == Some("index.md") {
+        // A page bundle — remove the whole folder (markdown + assets).
+        let dir = path
+            .parent()
+            .ok_or_else(|| AppError::msg("bundle has no parent directory"))?;
+        std::fs::remove_dir_all(dir)?;
+    } else {
+        // A single page.
+        std::fs::remove_file(path)?;
+    }
+    Ok(())
+}
+
 #[allow(dead_code)]
 pub fn walk_orphan_assets(_root: &Path) -> AppResult<Vec<PathBuf>> {
     // Reserved for future cleanup helpers.

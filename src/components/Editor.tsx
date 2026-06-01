@@ -1,7 +1,6 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import Table from "@tiptap/extension-table";
@@ -12,8 +11,10 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Highlight from "@tiptap/extension-highlight";
 import { Markdown } from "tiptap-markdown";
-import { useEffect, useRef } from "react";
+import { ResizableImage, ImageRow, insertImageAtDrop, handleImageRowDrop } from "../tiptap/ResizableImage";
+import { useEffect, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { ImagePlus } from "lucide-react";
 
 interface EditorProps {
   doc: { path: string; body: string; bundleDir: string | null };
@@ -26,6 +27,8 @@ export function MarkdownEditor({ doc, onChange, onImageDrop, onPasteImage }: Edi
   const bundleDir = doc.bundleDir;
   const lastEmittedRef = useRef<string>("");
   const docPathRef = useRef<string>(doc.path);
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
 
   const editor = useEditor({
     extensions: [
@@ -33,7 +36,8 @@ export function MarkdownEditor({ doc, onChange, onImageDrop, onPasteImage }: Edi
         // We let Markdown extension serialize/parse; StarterKit nodes feed it.
       }),
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true, HTMLAttributes: { rel: "noopener" } }),
-      Image.configure({ inline: false, allowBase64: true }),
+      ResizableImage.configure({ inline: false, allowBase64: true }),
+      ImageRow,
       Placeholder.configure({ placeholder: "Start writing…" }),
       Typography,
       Table.configure({ resizable: false }),
@@ -88,27 +92,72 @@ export function MarkdownEditor({ doc, onChange, onImageDrop, onPasteImage }: Edi
         }
         return false;
       },
-      handleDrop(view, event) {
-        const files = Array.from(event.dataTransfer?.files ?? []);
-        const imageFile = files.find((f) => f.type.startsWith("image/"));
-        if (imageFile && onImageDrop) {
-          event.preventDefault();
-          (async () => {
-            const inserted = await onImageDrop(imageFile);
-            if (inserted) {
-              const url = bundleDir ? convertFileSrc(`${bundleDir}/${inserted}`) : inserted;
-              const coords = { left: event.clientX, top: event.clientY };
-              const pos = view.posAtCoords(coords)?.pos ?? view.state.selection.from;
-              const node = view.state.schema.nodes.image.create({ src: url, alt: inserted });
-              view.dispatch(view.state.tr.insert(pos, node));
-            }
-          })();
-          return true;
-        }
-        return false;
+      handleDrop(view, event, slice, moved) {
+        // Merge an existing image dragged onto another image into a row.
+        return handleImageRowDrop(view, event as DragEvent, slice, moved);
       },
     },
   });
+
+  // --- File drag & drop (handled at the window level) ---
+  // With the window's native dragDropEnabled turned off, OS file drops arrive as
+  // standard HTML5 drag events. We listen on the whole window so an image dropped
+  // anywhere over the app gets inserted into the open document — and, crucially,
+  // we preventDefault so the webview never navigates to (and gets stuck showing)
+  // the raw image file.
+  useEffect(() => {
+    if (!editor) return;
+    const view = editor.view;
+    const hasFiles = (e: DragEvent) =>
+      Array.from(e.dataTransfer?.types ?? []).includes("Files");
+
+    function onWinDragEnter(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setDragging(true);
+    }
+    function onWinDragOver(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    }
+    function onWinDragLeave(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) setDragging(false);
+    }
+    function onWinDrop(e: DragEvent) {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepth.current = 0;
+      setDragging(false);
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      const imageFile = files.find((f) => f.type.startsWith("image/"));
+      if (!imageFile || !onImageDrop) return;
+      // Remember the drop point — dropping onto an existing image forms a row.
+      const x = e.clientX;
+      const y = e.clientY;
+      (async () => {
+        const inserted = await onImageDrop(imageFile);
+        if (!inserted) return;
+        const url = bundleDir ? convertFileSrc(`${bundleDir}/${inserted}`) : inserted;
+        insertImageAtDrop(view, { src: url, alt: inserted }, x, y);
+      })();
+    }
+
+    window.addEventListener("dragenter", onWinDragEnter);
+    window.addEventListener("dragover", onWinDragOver);
+    window.addEventListener("dragleave", onWinDragLeave);
+    window.addEventListener("drop", onWinDrop);
+    return () => {
+      window.removeEventListener("dragenter", onWinDragEnter);
+      window.removeEventListener("dragover", onWinDragOver);
+      window.removeEventListener("dragleave", onWinDragLeave);
+      window.removeEventListener("drop", onWinDrop);
+      dragDepth.current = 0;
+    };
+  }, [editor, bundleDir, onImageDrop]);
 
   // When the open document changes, replace editor content.
   useEffect(() => {
@@ -121,8 +170,16 @@ export function MarkdownEditor({ doc, onChange, onImageDrop, onPasteImage }: Edi
   }, [doc.path, doc.body, bundleDir, editor]);
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="relative flex-1 overflow-y-auto">
       {editor && <EditorContent editor={editor} />}
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-accent-500/10 backdrop-blur-[1px]">
+          <div className="flex items-center gap-2 rounded-xl border-2 border-dashed border-accent-500/60 bg-white/85 px-6 py-4 text-sm font-medium text-accent-700 shadow-lg dark:bg-stone-900/85 dark:text-accent-300">
+            <ImagePlus size={18} />
+            Drop image to add &amp; auto-compress
+          </div>
+        </div>
+      )}
     </div>
   );
 }

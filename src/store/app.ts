@@ -53,6 +53,8 @@ interface AppState {
   openRepo: (path: string) => Promise<void>;
   closeRepo: () => void;
   refreshTree: () => Promise<void>;
+  createSection: (parent: string, name: string) => Promise<void>;
+  deleteNode: (node: ContentNode) => Promise<void>;
   openDocAt: (path: string) => Promise<void>;
   setDocBody: (body: string) => void;
   setDocFrontmatter: (fm: Record<string, unknown>) => void;
@@ -135,6 +137,48 @@ export const useApp = create<AppState>((set, get) => ({
       get().toast(e?.message ?? String(e), "error");
     } finally {
       set({ treeLoading: false });
+    }
+  },
+
+  async createSection(parent, name) {
+    const repo = get().repo;
+    if (!repo) return;
+    try {
+      await api.section.create({ repoRoot: repo.root, parent, name });
+      await get().refreshTree();
+      get().toast("Section created", "success");
+    } catch (e: any) {
+      get().toast(e?.message ?? String(e), "error");
+      throw e;
+    }
+  },
+
+  async deleteNode(node) {
+    const repo = get().repo;
+    if (!repo) return;
+    try {
+      await api.node.delete({ repoRoot: repo.root, path: node.path });
+      // If the open doc lived inside the deleted node, close it.
+      const open = get().openDoc;
+      if (open) {
+        // The directory that was removed on disk.
+        const deletedDir =
+          node.kind === "bundle" ? node.path.replace(/[/\\]index\.md$/, "") : node.path;
+        if (
+          open.path === node.path ||
+          open.path === deletedDir ||
+          open.path.startsWith(deletedDir + "/") ||
+          open.path.startsWith(deletedDir + "\\")
+        ) {
+          set({ openDoc: null });
+        }
+      }
+      await get().refreshTree();
+      await get().refreshGit();
+      get().toast("Deleted", "success");
+    } catch (e: any) {
+      get().toast(e?.message ?? String(e), "error");
+      throw e;
     }
   },
 

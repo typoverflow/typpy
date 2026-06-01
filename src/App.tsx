@@ -5,7 +5,6 @@ import { TopBar } from "./components/TopBar";
 import { MarkdownEditor } from "./components/Editor";
 import { FrontMatterPanel } from "./components/FrontMatterPanel";
 import { CommitDialog } from "./components/CommitDialog";
-import { NewPostDialog } from "./components/NewPostDialog";
 import { Toasts } from "./components/Toasts";
 import { ImageOptionsButton } from "./components/ImageOptionsButton";
 import { HugoLogPanel } from "./components/HugoLogPanel";
@@ -28,7 +27,6 @@ export default function App() {
   const openRepo = useApp((s) => s.openRepo);
 
   const [commitOpen, setCommitOpen] = useState(false);
-  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     bootstrap();
@@ -83,6 +81,25 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [doc, saveDoc]);
 
+  // Guard against stray file drops. With the window's native dragDropEnabled
+  // turned off, a file dropped anywhere outside the editor's drop zone would
+  // otherwise make the webview navigate to the file and display it raw — which
+  // looks like the app "getting stuck" on the image. Swallow those here. The
+  // editor's own handler stops propagation, so real drops still insert.
+  useEffect(() => {
+    function prevent(e: DragEvent) {
+      if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
+
   // Drop-image / paste-image handler
   async function handleImage(file: File): Promise<string | null> {
     if (!doc?.bundleDir) {
@@ -128,7 +145,7 @@ export default function App() {
     <div className="flex h-full flex-col bg-stone-50 dark:bg-stone-950">
       <TopBar onCommit={() => setCommitOpen(true)} />
       <div className="flex min-h-0 flex-1">
-        <Sidebar onNewPost={() => setNewOpen(true)} />
+        <Sidebar />
         <main className="flex min-w-0 flex-1 flex-col">
           {doc ? (
             <>
@@ -159,7 +176,6 @@ export default function App() {
       </div>
       <HugoLogPanel />
       {commitOpen && <CommitDialog onClose={() => setCommitOpen(false)} />}
-      {newOpen && <NewPostDialog onClose={() => setNewOpen(false)} />}
       <Toasts />
     </div>
   );

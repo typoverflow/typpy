@@ -93,6 +93,29 @@ fn post_create(args: CreatePostArgs) -> AppResult<PathBuf> {
     repo::create_bundle(&args.repo_root, &args.section, &args.slug, &args.frontmatter)
 }
 
+#[derive(Deserialize)]
+struct CreateSectionArgs {
+    repo_root: PathBuf,
+    parent: String,
+    name: String,
+}
+
+#[tauri::command]
+fn section_create(args: CreateSectionArgs) -> AppResult<PathBuf> {
+    repo::create_section(&args.repo_root, &args.parent, &args.name)
+}
+
+#[derive(Deserialize)]
+struct DeleteNodeArgs {
+    repo_root: PathBuf,
+    path: PathBuf,
+}
+
+#[tauri::command]
+fn node_delete(args: DeleteNodeArgs) -> AppResult<()> {
+    repo::delete_node(&args.repo_root, &args.path)
+}
+
 // ---------- Images ----------
 
 #[derive(Deserialize)]
@@ -284,6 +307,8 @@ pub fn run() {
             post_read,
             post_write,
             post_create,
+            section_create,
+            node_delete,
             image_import,
             image_compress,
             git_status,

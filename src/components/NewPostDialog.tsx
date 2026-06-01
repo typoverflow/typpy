@@ -4,10 +4,12 @@ import { useApp } from "../store/app";
 import { api } from "../api/tauri";
 
 interface Props {
+  /** Relative path of the section to preselect (e.g. "post" or "blog/travel"). */
+  initialSection?: string;
   onClose: () => void;
 }
 
-export function NewPostDialog({ onClose }: Props) {
+export function NewPostDialog({ initialSection, onClose }: Props) {
   const repo = useApp((s) => s.repo);
   const tree = useApp((s) => s.tree);
   const refreshTree = useApp((s) => s.refreshTree);
@@ -18,7 +20,7 @@ export function NewPostDialog({ onClose }: Props) {
     return (tree ?? []).filter((n) => n.kind === "section").map((n) => n.name);
   }, [tree]);
 
-  const [section, setSection] = useState(sections[0] ?? "post");
+  const [section, setSection] = useState(initialSection ?? sections[0] ?? "post");
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [busy, setBusy] = useState(false);
